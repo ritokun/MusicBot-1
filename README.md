@@ -1,5 +1,6 @@
 # MusicBot JP
 
+[![GitHub tag](https://img.shields.io/github/tag/kosugikun/MusicBot.svg?style=flat-square)](https://github.com/kosugikun/MusicBot/releases/latest)
 [![GitHub license](https://img.shields.io/github/license/kosugikun/MusicBot.svg?style=flat-square)](https://github.com/kosugikun/MusicBot/blob/master/LICENSE)
 [![Discord](https://img.shields.io/discord/414411462207995904.svg?style=flat-square)](https://discord.gg/DuN7jvh)
 
