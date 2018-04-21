@@ -21,8 +21,6 @@ ytdl_format_options = {
     'default_search': 'auto',
     'source_address': '0.0.0.0',
     'usenetrc': True,
-    'username': 'kosukisaki@gmail.com',
-    'password': 'Kosukura20016'
 }
 
 # Fuck your useless bugreports message that gets two link embeds and confuses users
