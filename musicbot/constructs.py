@@ -72,24 +72,24 @@ class Serializer(json.JSONEncoder):
     @classmethod
     def deserialize(cls, data):
         if all(x in data for x in Serializable._class_signature):
-            # log.debug("%sの逆シリアル化が要求されました", data)
+            # log.debug("Deserialization requested for %s", data)
             factory = pydoc.locate(data['__module__'] + '.' + data['__class__'])
-            # log.debug("見つかりましたオブジェクト%s", factory)
+            # log.debug("Found object %s", factory)
             if factory and issubclass(factory, Serializable):
-                # log.debug("%sオブジェクトの逆シリアル化", factory)
+                # log.debug("Deserializing %s object", factory)
                 return factory._deserialize(data['data'], **cls._get_vars(factory._deserialize))
 
         return data
 
     @classmethod
     def _get_vars(cls, func):
-        # log.debug("%sの値を取得する", func)
+        # log.debug("Getting vars for %s", func)
         params = inspect.signature(func).parameters.copy()
         args = {}
-        # log.debug("%sを取得しました", params)
+        # log.debug("Got %s", params)
 
         for name, param in params.items():
-            # log.debug("arg%sを確認して、%sと入力してください", name, param.kind)
+            # log.debug("Checking arg %s, type %s", name, param.kind)
             if param.kind is param.POSITIONAL_OR_KEYWORD and param.default is None:
                 # log.debug("Using var %s", name)
                 args[name] = _get_variable(name)
@@ -111,7 +111,7 @@ class Serializable:
     # Perhaps convert this into some sort of decorator
     @staticmethod
     def _bad(arg):
-        raise TypeError('引数 "%s"はNoneであってはなりません。' % arg)
+        raise TypeError('Argument "%s" must not be None' % arg)
 
     def serialize(self, *, cls=Serializer, **kwargs):
         return json.dumps(self, cls=cls, **kwargs)
@@ -169,7 +169,10 @@ class VoiceStateUpdate:
     def is_about_my_voice_channel(self):
         return all((
             self.my_voice_channel,
-            self.voice_channel == self.my_voice_channel
+            any((
+                self.new_voice_channel == self.my_voice_channel,
+                self.old_voice_channel == self.my_voice_channel
+            ))
         ))
 
     @property

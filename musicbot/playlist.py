@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 class Playlist(EventEmitter, Serializable):
     """
-        プレイリストは、再生される曲のリストを管理します。
+        A playlist is manages the list of songs that will be played.
     """
 
     def __init__(self, bot):
@@ -41,55 +41,68 @@ class Playlist(EventEmitter, Serializable):
 
     def clear(self):
         self.entries.clear()
+        
+    def get_entry_at_index(self, index):
+        self.entries.rotate(-index)
+        entry = self.entries[0]
+        self.entries.rotate(index)
+        return entry
+        
+    def delete_entry_at_index(self, index):
+        self.entries.rotate(-index)
+        entry = self.entries.popleft()
+        self.entries.rotate(index)
+        return entry
+
 
     async def add_entry(self, song_url, **meta):
         """
-            再生するsong_urlを検証して追加します。これで曲のダウンロードは開始されません。
+            Validates and adds a song_url to be played. This does not start the download of the song.
 
-            エントリとそのキュー内の位置を返します。
+            Returns the entry & the position it is in the queue.
 
-            ：param song_url：プレイリストに追加する曲のURL。
-            ：param meta：プレイリストエントリに追加する追加メタデータ。
+            :param song_url: The song url to add to the playlist.
+            :param meta: Any additional metadata to add to the playlist entry.
         """
 
         try:
             info = await self.downloader.extract_info(self.loop, song_url, download=False)
         except Exception as e:
-            raise ExtractionError('{}から情報を抽出できませんでした\n \n {}'.format(song_url, e))
+            raise ExtractionError('Could not extract information from {}\n\n{}'.format(song_url, e))
 
         if not info:
-            raise ExtractionError('%sから情報を抽出できませんでした' % song_url)
+            raise ExtractionError('Could not extract information from %s' % song_url)
 
         # TODO: Sort out what happens next when this happens
         if info.get('_type', None) == 'playlist':
-            raise WrongEntryTypeError("これはプレイリストです。", True, info.get('webpage_url', None) or info.get('url', None))
+            raise WrongEntryTypeError("This is a playlist.", True, info.get('webpage_url', None) or info.get('url', None))
 
         if info.get('is_live', False):
             return await self.add_stream_entry(song_url, info=info, **meta)
 
         # TODO: Extract this to its own function
         if info['extractor'] in ['generic', 'Dropbox']:
-            log.debug('ジェネリックエクストラクタ、またはDropboxを検出しました')
+            log.debug('Detected a generic extractor, or Dropbox')
             try:
                 headers = await get_header(self.bot.aiosession, info['url'])
                 content_type = headers.get('CONTENT-TYPE')
-                log.debug("コンテンツタイプ{}を取得しました".format(content_type))
+                log.debug("Got content type {}".format(content_type))
             except Exception as e:
-                log.warning("url {}({})のコンテンツタイプを取得できませんでした".format(song_url, e))
+                log.warning("Failed to get content type for url {} ({})".format(song_url, e))
                 content_type = None
 
             if content_type:
                 if content_type.startswith(('application/', 'image/')):
                     if not any(x in content_type for x in ('/ogg', '/octet-stream')):
                         # How does a server say `application/ogg` what the actual fuck
-                        raise ExtractionError("url%sのコンテンツタイプ\"%s\"が無効です" % (content_type, song_url))
+                        raise ExtractionError("Invalid content type \"%s\" for url %s" % (content_type, song_url))
 
                 elif content_type.startswith('text/html') and info['extractor'] == 'generic':
                     log.warning("Got text/html for content-type, this might be a stream.")
                     return await self.add_stream_entry(song_url, info=info, **meta)  # TODO: Check for shoutcast/icecast
 
                 elif not content_type.startswith(('audio/', 'video/')):
-                    log.warning("疑問のあるコンテンツタイプ\"{}\"のURL {}".format(content_type, song_url))
+                    log.warning("Questionable content-type \"{}\" for url {}".format(content_type, song_url))
 
         entry = URLPlaylistEntry(
             self,
@@ -110,28 +123,31 @@ class Playlist(EventEmitter, Serializable):
                 info = await self.downloader.extract_info(self.loop, song_url, download=False)
 
             except DownloadError as e:
-                if e.exc_info[0] == UnsupportedError: # ytdl doesn't like it but its probably a stream
-                    log.debug("コンテンツが直接ストリームであると仮定します")
+                if e.exc_info[0] == UnsupportedError:  # ytdl doesn't like it but its probably a stream
+                    log.debug("Assuming content is a direct stream")
 
                 elif e.exc_info[0] == URLError:
                     if os.path.exists(os.path.abspath(song_url)):
-                        raise ExtractionError("これはストリームではなく、ファイルパスです。")
+                        raise ExtractionError("This is not a stream, this is a file path.")
 
-                    else: # it might be a file path that just doesn't exist
-                        raise ExtractionError("無効入力: {0.exc_info[0]}: {0.exc_info[1].reason}".format(e))
+                    else:  # it might be a file path that just doesn't exist
+                        raise ExtractionError("Invalid input: {0.exc_info[0]}: {0.exc_info[1].reason}".format(e))
 
                 else:
                     # traceback.print_exc()
-                    raise ExtractionError("不明なエラー:{}".format(e))
+                    raise ExtractionError("Unknown error: {}".format(e))
 
             except Exception as e:
-                log.error('{}({})から情報を抽出できませんでした。直接'.format(song_url, e), exc_info=True)
+                log.error('Could not extract information from {} ({}), falling back to direct'.format(song_url, e), exc_info=True)
+
+        if info.get('is_live') is None and info.get('extractor', None) is not 'generic':  # wew hacky
+            raise ExtractionError("This is not a stream.")
 
         dest_url = song_url
         if info.get('extractor'):
             dest_url = info.get('url')
 
-        if info.get('extractor', None) == 'twitch:stream': # may need to add other twitch types
+        if info.get('extractor', None) == 'twitch:stream':  # may need to add other twitch types
             title = info.get('description')
         else:
             title = info.get('title', 'Untitled')
@@ -150,12 +166,12 @@ class Playlist(EventEmitter, Serializable):
 
     async def import_from(self, playlist_url, **meta):
         """
-            `playlist_url`から曲をインポートし、再生するようにキューに入れます。
+            Imports the songs from `playlist_url` and queues them to be played.
 
-            エンキューされた `entries`のリストを返します。
+            Returns a list of `entries` that have been enqueued.
 
-            ：param playlist_url：個々のURLに分割され、プレイリストに追加されるプレイリストURL
-            ：param meta：プレイリストエントリに追加する追加メタデータ
+            :param playlist_url: The playlist url to be cut into individual urls and added to the playlist
+            :param meta: Any additional metadata to add to the playlist entry
         """
         position = len(self.entries) + 1
         entry_list = []
@@ -163,10 +179,10 @@ class Playlist(EventEmitter, Serializable):
         try:
             info = await self.downloader.safe_extract_info(self.loop, playlist_url, download=False)
         except Exception as e:
-            raise ExtractionError('{}から情報を抽出できませんでした\n \n {}'.format(playlist_url, e))
+            raise ExtractionError('Could not extract information from {}\n\n{}'.format(playlist_url, e))
 
         if not info:
-            raise ExtractionError('%sから情報を抽出できませんでした' % playlist_url)
+            raise ExtractionError('Could not extract information from %s' % playlist_url)
 
         # Once again, the generic extractor fucks things up.
         if info.get('extractor', None) == 'generic':
@@ -191,31 +207,31 @@ class Playlist(EventEmitter, Serializable):
                     entry_list.append(entry)
                 except Exception as e:
                     baditems += 1
-                    log.warning("アイテムを追加できませんでした", exc_info=e)
-                    log.debug("項目:{}".format(item), exc_info=True)
+                    log.warning("Could not add item", exc_info=e)
+                    log.debug("Item: {}".format(item), exc_info=True)
             else:
                 baditems += 1
 
         if baditems:
-            log.info("{}の不良エントリをスキップしました。".format(baditems))
+            log.info("Skipped {} bad entries".format(baditems))
 
         return entry_list, position
 
     async def async_process_youtube_playlist(self, playlist_url, **meta):
         """
-            `playlist_url`のyoutubeプレイリストのリンクを疑わしい非同期の方法で処理します。
+            Processes youtube playlists links from `playlist_url` in a questionable, async fashion.
 
-            ：param playlist_url：個々のURLに分割され、プレイリストに追加されるプレイリストURL
-            ：param meta：プレイリストエントリに追加する追加メタデータ
+            :param playlist_url: The playlist url to be cut into individual urls and added to the playlist
+            :param meta: Any additional metadata to add to the playlist entry
         """
 
         try:
             info = await self.downloader.safe_extract_info(self.loop, playlist_url, download=False, process=False)
         except Exception as e:
-            raise ExtractionError('{}から情報を抽出できませんでした\n \n {}'.format(playlist_url, e))
+            raise ExtractionError('Could not extract information from {}\n\n{}'.format(playlist_url, e))
 
         if not info:
-            raise ExtractionError('%sから情報を抽出できませんでした' % playlist_url)
+            raise ExtractionError('Could not extract information from %s' % playlist_url)
 
         gooditems = []
         baditems = 0
@@ -239,25 +255,25 @@ class Playlist(EventEmitter, Serializable):
                 baditems += 1
 
         if baditems:
-            log.info("{}の不正なエントリをスキップしました".format(baditems))
+            log.info("Skipped {} bad entries".format(baditems))
 
         return gooditems
 
     async def async_process_sc_bc_playlist(self, playlist_url, **meta):
         """
-            `playlist_url`のsoundcloud setとbancdamp albumリンクを、疑わしい非同期の方法で処理します。
+            Processes soundcloud set and bancdamp album links from `playlist_url` in a questionable, async fashion.
 
-            ：param playlist_url：個々のURLに分割され、プレイリストに追加されるプレイリストURL
-            ：param meta：プレイリストエントリに追加する追加メタデータ
+            :param playlist_url: The playlist url to be cut into individual urls and added to the playlist
+            :param meta: Any additional metadata to add to the playlist entry
         """
 
         try:
             info = await self.downloader.safe_extract_info(self.loop, playlist_url, download=False, process=False)
         except Exception as e:
-            raise ExtractionError('{}から情報を抽出できませんでした\n \n {}'.format(playlist_url, e))
+            raise ExtractionError('Could not extract information from {}\n\n{}'.format(playlist_url, e))
 
         if not info:
-            raise ExtractionError('%sから情報を抽出できませんでした' % playlist_url)
+            raise ExtractionError('Could not extract information from %s' % playlist_url)
 
         gooditems = []
         baditems = 0
@@ -275,12 +291,12 @@ class Playlist(EventEmitter, Serializable):
 
                 except Exception as e:
                     baditems += 1
-                    log.error("エントリの追加エラー{}".format(entry_data['id']), exc_info=e)
+                    log.error("Error adding entry {}".format(entry_data['id']), exc_info=e)
             else:
                 baditems += 1
 
         if baditems:
-            log.info("%sの不正なエントリをスキップしました".format(baditems))
+            log.info("Skipped {} bad entries".format(baditems))
 
         return gooditems
 
@@ -295,12 +311,15 @@ class Playlist(EventEmitter, Serializable):
         if self.peek() is entry:
             entry.get_ready_future()
 
+    def remove_entry(self, index):
+        del self.entries[index]
+
     async def get_next_entry(self, predownload_next=True):
         """
-            次の曲を返すコルーチン、または再生する曲が残っていない場合はNoneを返します。
+            A coroutine which will return the next song or None if no songs left to play.
 
-            さらに、predownload_nextがTrueに設定されている場合、次のファイルをダウンロードしようとします
-            演奏される歌 - 私たちがそれを得るまでに準備が整うように。
+            Additionally, if predownload_next is set to True, it will attempt to download the next
+            song to be played - so that it's ready by the time we get to it.
         """
         if not self.entries:
             return None
@@ -316,14 +335,14 @@ class Playlist(EventEmitter, Serializable):
 
     def peek(self):
         """
-            再生予定の次のエントリを返します。
+            Returns the next entry that should be scheduled to be played.
         """
         if self.entries:
             return self.entries[0]
 
     async def estimate_time_until(self, position, player):
         """
-           (非常に)待ち時間が「位置付け」するまでの時間を計算します
+            (very) Roughly estimates the time till the queue will 'position'
         """
         estimated_time = sum(e.duration for e in islice(self.entries, position - 1))
 
@@ -345,7 +364,7 @@ class Playlist(EventEmitter, Serializable):
     @classmethod
     def _deserialize(cls, raw_json, bot=None):
         assert bot is not None, cls._bad('bot')
-        # log.debug("プレイリストのデシリアライズ")
+        # log.debug("Deserializing playlist")
         pl = cls(bot)
 
         for entry in raw_json['entries']:

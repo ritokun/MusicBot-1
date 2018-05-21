@@ -40,11 +40,15 @@ class FFmpegError(MusicbotException):
 class FFmpegWarning(MusicbotException):
     pass
 
+# Some issue retrieving something from Spotify's API
+class SpotifyError(MusicbotException):
+    pass
+
 # The user doesn't have permission to use a command
 class PermissionsError(CommandError):
     @property
     def message(self):
-        return "あなたはそのコマンドを使用する権限を持っていません。\n理由:" + self._message
+        return "You don't have permission to use that command.\nReason: " + self._message
 
 # Error with pretty formatting for hand-holding users through various errors
 class HelpfulError(MusicbotException):
