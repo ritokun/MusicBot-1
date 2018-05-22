@@ -51,7 +51,7 @@ log = logging.getLogger(__name__)
 class MusicBot(discord.Client):
     def __init__(self, config_file=None, perms_file=None):
         try:
-            sys.stdout.write("\x1b]2;MusicBot {}\x07".format(BOTVERSION))
+            sys.stdout.write("\x1b]2;MusicBot JP {}\x07".format(BOTVERSION))
         except:
             pass
         
@@ -81,16 +81,16 @@ class MusicBot(discord.Client):
 
         self._setup_logging()
 
-        log.info('Starting MusicBot {}'.format(BOTVERSION))
+        log.info('MusicBot JP {}を、起動します。'.format(BOTVERSION))
 
         if not self.autoplaylist:
-            log.warning("Autoplaylist is empty, disabling.")
+            log.warning("自動再生リストが空で無効になっています。")
             self.config.auto_playlist = False
         else:
-            log.info("Loaded autoplaylist with {} entries".format(len(self.autoplaylist)))
+            log.info("{}個のエントリを持つ自動再生リストを読み込みました。".format(len(self.autoplaylist)))
 
         if self.blacklist:
-            log.debug("Loaded blacklist with {} entries".format(len(self.blacklist)))
+            log.debug("{}のエントリを持つブラックリストを読み込みました".format(len(self.blacklist)))
 
         # TODO: Do these properly
         ssd_defaults = {
@@ -108,11 +108,11 @@ class MusicBot(discord.Client):
         if self.config._spotify:
             self.spotify = Spotify(self.config.spotify_clientid, self.config.spotify_clientsecret, aiosession=self.aiosession, loop=self.loop)
             if not self.spotify.token:
-                log.warning('Your Spotify credentials could not be validated. Please make sure your client ID and client secret '
-                            'in the config file are correct. Disabling Spotify integration for this session.')
+                log.warning('Spotifyの資格情報を検証できませんでした。クライアントIDとクライアントの秘密を確認してください'
+                            '設定ファイルの内容は正しいです。このセッションのSpotify統合を無効にする。')
                 self.config._spotify = False
             else:
-                log.info('Authenticated with Spotify successfully using client ID and secret.')
+                log.info('クライアントIDとシークレットを使用してSpotifyで正常に認証されました。')
 
     def __del__(self):
         # These functions return futures but it doesn't matter
@@ -150,7 +150,7 @@ class MusicBot(discord.Client):
                 # noinspection PyCallingNonCallable
                 return await func(self, *args, **kwargs)
             else:
-                raise exceptions.PermissionsError("Only dev users can use this command.", expire_in=30)
+                raise exceptions.PermissionsError("所有者だけがこのコマンドを使用できます。", expire_in=30)
 
         wrapper.dev_cmd = True
         return wrapper
@@ -189,7 +189,7 @@ class MusicBot(discord.Client):
 
     def _setup_logging(self):
         if len(logging.getLogger(__package__).handlers) > 1:
-            log.debug("Skipping logger setup, already set up")
+            log.debug("既にセットアップされているロガーセットアップをスキップする")
             return
 
         shandler = logging.StreamHandler(stream=sys.stdout)
@@ -224,7 +224,7 @@ class MusicBot(discord.Client):
         shandler.setLevel(self.config.debug_level)
         logging.getLogger(__package__).addHandler(shandler)
 
-        log.debug("Set logging level to {}".format(self.config.debug_level_str))
+        log.debug("ログレベルを{}に設定しました。".format(self.config.debug_level_str))
 
         if self.config.debug_mode:
             dlogger = logging.getLogger('discord')
@@ -253,7 +253,7 @@ class MusicBot(discord.Client):
 
         def _autopause(player):
             if self._check_if_empty(player.voice_client.channel):
-                log.info("Initial autopause in empty channel")
+                log.info("空のチャンネルでの初期自動休止")
 
                 player.pause()
                 self.server_specific_data[player.voice_client.channel.server]['auto_paused'] = True
@@ -263,38 +263,38 @@ class MusicBot(discord.Client):
                 continue
 
             if server.me.voice_channel:
-                log.info("Found resumable voice channel {0.server.name}/{0.name}".format(server.me.voice_channel))
+                log.info("再開可能な音声チャネルが見つかりました {0.server.name}/{0.name}".format(server.me.voice_channel))
                 channel_map[server] = server.me.voice_channel
 
             if autosummon:
                 owner = self._get_owner(server=server, voice=True)
                 if owner:
-                    log.info("Found owner in \"{}\"".format(owner.voice_channel.name))
+                    log.info("所有者が見つかりました \"{}\"".format(owner.voice_channel.name))
                     channel_map[server] = owner.voice_channel
 
         for server, channel in channel_map.items():
             if server in joined_servers:
-                log.info("Already joined a channel in \"{}\", skipping".format(server.name))
+                log.info("すでにチャンネルに参加しています \"{}\", スキップする".format(server.name))
                 continue
 
             if channel and channel.type == discord.ChannelType.voice:
-                log.info("Attempting to join {0.server.name}/{0.name}".format(channel))
+                log.info("参加しようとしています{0.server.name}/{0.name}".format(channel))
 
                 chperms = channel.permissions_for(server.me)
 
                 if not chperms.connect:
-                    log.info("Cannot join channel \"{}\", no permission.".format(channel.name))
+                    log.info("\"{}\"チャンネルに参加できません。許可はありません。".format(channel.name))
                     continue
 
                 elif not chperms.speak:
-                    log.info("Will not join channel \"{}\", no permission to speak.".format(channel.name))
+                    log.info("\"{}\"というチャンネルには参加しません。話す許可はありません。".format(channel.name))
                     continue
 
                 try:
                     player = await self.get_player(channel, create=True, deserialize=self.config.persistent_queue)
                     joined_servers.add(server)
 
-                    log.info("Joined {0.server.name}/{0.name}".format(channel))
+                    log.info("{0.server.name}/{0.name}に参加しました。".format(channel))
 
                     if player.is_stopped:
                         player.play()
@@ -306,14 +306,14 @@ class MusicBot(discord.Client):
                             await self.on_player_finished_playing(player)
                 
                 except Exception:
-                    log.debug("Error joining {0.server.name}/{0.name}".format(channel), exc_info=True)
-                    log.error("Failed to join {0.server.name}/{0.name}".format(channel))
+                    log.debug("{0.server.name}/{0.name}に参加中にエラー".format(channel), exc_info=True)
+                    log.error("{0.server.name}/{0.name} 参加できませんでした".format(channel))
 
             elif channel:
-                log.warning("Not joining {0.server.name}/{0.name}, that's a text channel.".format(channel))
+                log.warning("{0.server.name}/{0.name}に参加できません、それはテキストチャネルです。".format(channel))
 
             else:
-                log.warning("Invalid channel thing: {}".format(channel))
+                log.warning("無効なチャンネル: {}".format(channel))
 
     async def _wait_delete_msg(self, message, after):
         await asyncio.sleep(after)
@@ -332,11 +332,11 @@ class MusicBot(discord.Client):
             return True
         else:
             raise exceptions.PermissionsError(
-                "you cannot use this command when not in the voice channel (%s)" % vc.name, expire_in=30)
+                "このコマンドは、音声チャネル(%s)にないときは使用できません。" % vc.name, expire_in=30)
 
     async def _cache_app_info(self, *, update=False):
         if not self.cached_app_info and not update and self.user.bot:
-            log.debug("Caching app info")
+            log.debug("アプリ情報をキャッシュする")
             self.cached_app_info = await self.application_info()
 
         return self.cached_app_info
@@ -344,12 +344,12 @@ class MusicBot(discord.Client):
 
     async def remove_from_autoplaylist(self, song_url:str, *, ex:Exception=None, delete_from_ap=False):
         if song_url not in self.autoplaylist:
-            log.debug("URL \"{}\" not in autoplaylist, ignoring".format(song_url))
+            log.debug("URL \"{}\"は自動再生リストには含まれていません。".format(song_url))
             return
 
         async with self.aiolocks[_func_()]:
             self.autoplaylist.remove(song_url)
-            log.info("Removing unplayable song from autoplaylist: %s" % song_url)
+            log.info("再生できない曲をautoplaylistから削除する: %s" % song_url)
 
             with open(self.config.auto_playlist_removed_file, 'a', encoding='utf8') as f:
                 f.write(
@@ -363,7 +363,7 @@ class MusicBot(discord.Client):
                 ))
 
             if delete_from_ap:
-                log.info("Updating autoplaylist")
+                log.info("autoplaylistをアップデート")
                 write_file(self.config.auto_playlist_file, self.autoplaylist)
 
     @ensure_appinfo
@@ -376,19 +376,19 @@ class MusicBot(discord.Client):
             channel = self.get_channel(channel.id)
 
         if getattr(channel, 'type', ChannelType.text) != ChannelType.voice:
-            raise discord.InvalidArgument('Channel passed must be a voice channel')
+            raise discord.InvalidArgument('渡されたチャンネルは音声チャンネルでなければなりません')
 
         server = channel.server
 
         if self.is_voice_connected(server):
-            raise discord.ClientException('Already connected to a voice channel in this server')
+            raise discord.ClientException('このサーバーの音声チャネルに既に接続されています')
 
         def session_id_found(data):
             user_id = data.get('user_id')
             guild_id = data.get('guild_id')
             return user_id == self.user.id and guild_id == server.id
 
-        log.voicedebug("(%s) creating futures", _func_())
+        log.voicedebug("先物を作る（%s）", _func_())
         # register the futures for waiting
         session_id_future = self.ws.wait_for('VOICE_STATE_UPDATE', session_id_found)
         voice_data_future = self.ws.wait_for('VOICE_SERVER_UPDATE', lambda d: d.get('guild_id') == server.id)
