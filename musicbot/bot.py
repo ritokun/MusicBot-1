@@ -1918,10 +1918,10 @@ class MusicBot(discord.Client):
 
     async def cmd_np(self, player, channel, server, message):
         """
-        Usage:
+        使用法:
             {command_prefix}np
 
-        Displays the current song in chat.
+        チャットで、現在の曲を表示します。
         """
 
         if player.current_entry:
@@ -1952,10 +1952,10 @@ class MusicBot(discord.Client):
                 else:
                     prog_bar_str += '■'
 
-            action_text = self.str.get('cmd-np-action-streaming', 'Streaming') if streaming else self.str.get('cmd-np-action-playing', 'Playing')
+            action_text = self.str.get('cmd-np-action-streaming', 'ストリーム') if streaming else self.str.get('cmd-np-action-playing', '再生中')
 
             if player.current_entry.meta.get('channel', False) and player.current_entry.meta.get('author', False):
-                np_text = self.str.get('cmd-np-reply-author', "Now {action}: **{title}** added by **{author}**\nProgress: {progress_bar} {progress}\n\N{WHITE RIGHT POINTING BACKHAND INDEX} <{url}>").format(
+                np_text = self.str.get('cmd-np-reply-author', "今、{action}：** {title} **追加しました** {author} ** \ nprogress：{progress_bar} {progress}\n\N{WHITE RIGHT POINTING BACKHAND INDEX} <{url}>").format(
                     action=action_text,
                     title=player.current_entry.title,
                     author=player.current_entry.meta['author'].name,
@@ -1965,7 +1965,7 @@ class MusicBot(discord.Client):
                 )
             else:
 
-                np_text = self.str.get('cmd-np-reply-noauthor', "Now {action}: **{title}**\nProgress: {progress_bar} {progress}\n\N{WHITE RIGHT POINTING BACKHAND INDEX} <{url}>").format(
+                np_text = self.str.get('cmd-np-reply-noauthor', "{action}: **{title}**\n状況: {progress_bar} {progress}\n\N{WHITE RIGHT POINTING BACKHAND INDEX} <{url}>").format(
 
                     action=action_text,
                     title=player.current_entry.title,
@@ -1978,20 +1978,20 @@ class MusicBot(discord.Client):
             await self._manual_delete_check(message)
         else:
             return Response(
-                self.str.get('cmd-np-none', 'There are no songs queued! Queue something with {0}play.') .format(self.config.command_prefix),
+                self.str.get('cmd-np-none', 'キューに入っている曲はありません！ {0}でキューに入れる。') .format(self.config.command_prefix),
                 delete_after=30
             )
 
     async def cmd_summon(self, channel, server, author, voice_channel):
         """
-        Usage:
+        使用法:
             {command_prefix}summon
 
-        Call the bot to the summoner's voice channel.
+        ボットを実行者の音声チャネルに呼び出します。
         """
 
         if not author.voice_channel:
-            raise exceptions.CommandError(self.str.get('cmd-summon-novc', 'You are not in a voice channel!'))
+            raise exceptions.CommandError(self.str.get('cmd-summon-novc', 'あなたは音声チャンネルにいません！'))
 
         voice_client = self.voice_client_in(server)
         if voice_client and server == author.voice_channel.server:
@@ -2002,20 +2002,20 @@ class MusicBot(discord.Client):
         chperms = author.voice_channel.permissions_for(server.me)
 
         if not chperms.connect:
-            log.warning("Cannot join channel '{0}', no permission.".format(author.voice_channel.name))
+            log.warning("チャネル `{0}`に参加できません。許可はありません。".format(author.voice_channel.name))
             raise exceptions.CommandError(
-                self.str.get('cmd-summon-noperms-connect', "Cannot join channel `{0}`, no permission to connect.").format(author.voice_channel.name),
+                self.str.get('cmd-summon-noperms-connect', "チャネル `{0}`に参加できません。接続する権限はありません。").format(author.voice_channel.name),
                 expire_in=25
             )
 
         elif not chperms.speak:
-            log.warning("Cannot join channel '{0}', no permission to speak.".format(author.voice_channel.name))
+            log.warning("チャンネル `{0}`に参加できません。話す許可がありません。".format(author.voice_channel.name))
             raise exceptions.CommandError(
-                self.str.get('cmd-summon-noperms-speak', "Cannot join channel `{0}`, no permission to speak.").format(author.voice_channel.name),
+                self.str.get('cmd-summon-noperms-speak', "チャネル `{0}`に参加できません。話す許可がありません。").format(author.voice_channel.name),
                 expire_in=25
             )
 
-        log.info("Joining {0.server.name}/{0.name}".format(author.voice_channel))
+        log.info("{0.server.name}/{0.name}に参加しました。".format(author.voice_channel))
 
         player = await self.get_player(author.voice_channel, create=True, deserialize=self.config.persistent_queue)
 
@@ -2025,44 +2025,44 @@ class MusicBot(discord.Client):
         if self.config.auto_playlist:
             await self.on_player_finished_playing(player)
 
-        return Response(self.str.get('cmd-summon-reply', 'Connected to `{0.name}`').format(author.voice_channel))
+        return Response(self.str.get('cmd-summon-reply', '`{0.name}`に接続されています').format(author.voice_channel))
 
     async def cmd_pause(self, player):
         """
-        Usage:
+       使用法:
             {command_prefix}pause
 
-        Pauses playback of the current song.
+        現在の曲の再生を一時停止します。
         """
 
         if player.is_playing:
             player.pause()
-            return Response(self.str.get('cmd-pause-reply', 'Paused music in `{0.name}`').format(player.voice_client.channel))
+            return Response(self.str.get('cmd-pause-reply', '`{0.name}`で一時停止した音楽').format(player.voice_client.channel))
 
         else:
-            raise exceptions.CommandError(self.str.get('cmd-pause-none', 'Player is not playing.'), expire_in=30)
+            raise exceptions.CommandError(self.str.get('cmd-pause-none', 'プレーヤーは再生していません。'), expire_in=30)
 
     async def cmd_resume(self, player):
         """
-        Usage:
+        使用法:
             {command_prefix}resume
 
-        Resumes playback of a paused song.
+        一時停止した曲の再生を再開します。
         """
 
         if player.is_paused:
             player.resume()
-            return Response(self.str.get('cmd-resume-reply', 'Resumed music in `{0.name}`').format(player.voice_client.channel), delete_after=15)
+            return Response(self.str.get('cmd-resume-reply', '`{0.name}`の音楽を再開しました').format(player.voice_client.channel), delete_after=15)
 
         else:
-            raise exceptions.CommandError(self.str.get('cmd-resume-none', 'Player is not paused.'), expire_in=30)
+            raise exceptions.CommandError(self.str.get('cmd-resume-none', 'プレーヤーは一時停止していません。'), expire_in=30)
 
     async def cmd_shuffle(self, channel, player):
         """
-        Usage:
+        使用法:
             {command_prefix}shuffle
 
-        Shuffles the server's queue.
+        サーバーのキューをシャッフルします。
         """
 
         player.playlist.shuffle()
@@ -2079,7 +2079,7 @@ class MusicBot(discord.Client):
             await asyncio.sleep(0.6)
 
         await self.safe_delete_message(hand, quiet=True)
-        return Response(self.str.get('cmd-shuffle-reply', "Shuffled `{0}`'s queue.").format(player.voice_client.channel.server), delete_after=15)
+        return Response(self.str.get('cmd-shuffle-reply', "シャッフルされた `{0}`のキュー。").format(player.voice_client.channel.server), delete_after=15)
 
     async def cmd_clear(self, player, author):
         """
