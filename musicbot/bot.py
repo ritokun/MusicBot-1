@@ -822,7 +822,7 @@ class MusicBot(discord.Client):
             dir = 'data/%s/queue.json' % server.id
 
         async with self.aiolocks['queue_serialization'+':'+server.id]:
-            log.debug("%s個のキューをシリアライズしています", server.id)
+            log.debug("サーバーID%sのキューをシリアライズしています", server.id)
 
             with open(dir, 'w', encoding='utf8') as f:
                 f.write(player.serialize(sort_keys=True))
@@ -1385,7 +1385,7 @@ class MusicBot(discord.Client):
         設定ファイルのパーミッションは音楽をキューに入れることができます。
         """
         player.karaoke_mode = not player.karaoke_mode
-        return Response("\N {OK HAND SIGN}カラオケモード:" + ['無効', '有効'][player.karaoke_mode], delete_after=15)
+        return Response("\N{OK HAND SIGN}カラオケモード:" + ['無効', '有効'][player.karaoke_mode], delete_after=15)
 
     async def _do_playlist_checks(self, permissions, player, author, testobj):
         num_songs = sum(1 for _ in testobj)
@@ -1566,7 +1566,7 @@ class MusicBot(discord.Client):
                         raise
                     except Exception as e:
                         log.error("エラーキューイングプレイリスト", exc_info=True)
-                        raise exceptions.CommandError(self.str.get('cmd-play-playlist-error', "エラーキューイングプレイリスト:\n {0} `").format(e), expire_in=30)
+                        raise exceptions.CommandError(self.str.get('cmd-play-playlist-error', "エラーキューイングプレイリスト:\n`{0}`").format(e), expire_in=30)
 
                 t0 = time.time()
 
@@ -2083,10 +2083,10 @@ class MusicBot(discord.Client):
 
     async def cmd_clear(self, player, author):
         """
-        Usage:
+        使用法:
             {command_prefix}clear
 
-        Clears the playlist.
+       プレイリストをクリアします。
         """
 
         player.playlist.clear()
@@ -2094,14 +2094,14 @@ class MusicBot(discord.Client):
 
     async def cmd_remove(self, user_mentions, message, author, permissions, channel, player, index=None):
         """
-        Usage:
+        使用法:
             {command_prefix}remove [# in queue]
 
-        Removes queued songs. If a number is specified, removes that song in the queue, otherwise removes the most recently queued song.
+        キューに入れられた曲を削除します。数字が指定されている場合は、キュー内のその曲を削除し、それ以外の場合は最後にキューに入れられた曲を削除します。
         """
 
         if not player.playlist.entries:
-            raise exceptions.CommandError(self.str.get('cmd-remove-none', "There's nothing to remove!"), expire_in=20)
+            raise exceptions.CommandError(self.str.get('cmd-remove-none', "削除するものはありません！"), expire_in=20)
 
         if user_mentions:
             for user in user_mentions:
@@ -2113,13 +2113,13 @@ class MusicBot(discord.Client):
                         entry_text = '%s ' % len(entry_indexes) + 'item'
                         if len(entry_indexes) > 1:
                             entry_text += 's'
-                        return Response(self.str.get('cmd-remove-reply', "Removed `{0}` added by `{1}`").format(entry_text, user.name).strip())
+                        return Response(self.str.get('cmd-remove-reply', "`{1}`によって追加された `{0}`が削除されました").format(entry_text, user.name).strip())
 
                     except ValueError:
-                        raise exceptions.CommandError(self.str.get('cmd-remove-missing', "Nothing found in the queue from user `%s`") % user.name, expire_in=20)
+                        raise exceptions.CommandError(self.str.get('cmd-remove-missing', "キュー `%s`の中に何も見つかりません") % user.name, expire_in=20)
 
                 raise exceptions.PermissionsError(
-                    self.str.get('cmd-remove-noperms', "You do not have the valid permissions to remove that entry from the queue, make sure you're the one who queued it or have instant skip permissions"), expire_in=20)
+                    self.str.get('cmd-remove-noperms', "キューからそのエントリを削除するための有効な権限がありません。キューに登録しているか、インスタントスキップ権限を持っていることを確認してください"), expire_in=20)
 
         if not index:
             index = len(player.playlist.entries)
@@ -2127,48 +2127,48 @@ class MusicBot(discord.Client):
         try:
             index = int(index)
         except (TypeError, ValueError):
-            raise exceptions.CommandError(self.str.get('cmd-remove-invalid', "Invalid number. Use {}queue to find queue positions.").format(self.config.command_prefix), expire_in=20)
+            raise exceptions.CommandError(self.str.get('cmd-remove-invalid', "無効な番号。 {}キューを使用してキューの位置を検索します。").format(self.config.command_prefix), expire_in=20)
 
         if index > len(player.playlist.entries):
-            raise exceptions.CommandError(self.str.get('cmd-remove-invalid', "Invalid number. Use {}queue to find queue positions.").format(self.config.command_prefix), expire_in=20)
+            raise exceptions.CommandError(self.str.get('cmd-remove-invalid', "無効な番号。 {}キューを使用してキューの位置を検索します。").format(self.config.command_prefix), expire_in=20)
 
         if author.id == self.config.owner_id or permissions.remove or author == player.playlist.get_entry_at_index(index - 1).meta.get('author', None):
             entry = player.playlist.delete_entry_at_index((index - 1))
             await self._manual_delete_check(message)
             if entry.meta.get('channel', False) and entry.meta.get('author', False):
-                return Response(self.str.get('cmd-remove-reply-author', "Removed entry `{0}` added by `{1}`").format(entry.title, entry.meta['author'].name).strip())
+                return Response(self.str.get('cmd-remove-reply-author', "`{1}`によって追加されたエントリ `{0}`が削除されました").format(entry.title, entry.meta['author'].name).strip())
             else:
-                return Response(self.str.get('cmd-remove-reply-noauthor', "Removed entry `{0}`").format(entry.title).strip())
+                return Response(self.str.get('cmd-remove-reply-noauthor', "削除されたエントリ `{0}`").format(entry.title).strip())
         else:
             raise exceptions.PermissionsError(
-                self.str.get('cmd-remove-noperms', "You do not have the valid permissions to remove that entry from the queue, make sure you're the one who queued it or have instant skip permissions"), expire_in=20
+                self.str.get('cmd-remove-noperms', "キューからそのエントリを削除するための有効な権限がありません。キューに登録しているか、インスタントスキップ権限を持っていることを確認してください"), expire_in=20
             )
 
     async def cmd_skip(self, player, channel, author, message, permissions, voice_channel, param=''):
         """
-        Usage:
+        使用法:
             {command_prefix}skip [force/f]
 
-        Skips the current song when enough votes are cast.
-        Owners and those with the instaskip permission can add 'force' or 'f' after the command to force skip.
+        十分な票が投​​げられたら、現在の曲をスキップします。
+        所有者とinstaskip権限を持つユーザーは、スキップを強制するコマンドの後に 'force'または 'f'を追加できます。
         """
 
         if player.is_stopped:
-            raise exceptions.CommandError(self.str.get('cmd-skip-none', "Can't skip! The player is not playing!"), expire_in=20)
+            raise exceptions.CommandError(self.str.get('cmd-skip-none', "スキップできません！プレイヤーはプレイしていません！"), expire_in=20)
 
         if not player.current_entry:
             if player.playlist.peek():
                 if player.playlist.peek()._is_downloading:
-                    return Response(self.str.get('cmd-skip-dl', "The next song (`%s`) is downloading, please wait.") % player.playlist.peek().title)
+                    return Response(self.str.get('cmd-skip-dl', "次の曲(`%s`)がダウンロードされています。お待ちください。") % player.playlist.peek().title)
 
                 elif player.playlist.peek().is_downloaded:
-                    print("The next song will be played shortly.  Please wait.")
+                    print("次の曲はすぐに再生されます。お待ちください。")
                 else:
-                    print("Something odd is happening.  "
-                          "You might want to restart the bot if it doesn't start working.")
+                    print("何か奇妙なことが起きている。"
+                          "ボットが動作しなくなった場合は、ボットを再起動したいかもしれません。")
             else:
-                print("Something strange is happening.  "
-                      "You might want to restart the bot if it doesn't start working.")
+                print("奇妙なことが起きている。  "
+                      "ボットが動作しなくなった場合は、ボットを再起動したいかもしれません。")
 
         if param.lower() in ['force', 'f']:
             if author.id == self.config.owner_id \
@@ -2177,9 +2177,9 @@ class MusicBot(discord.Client):
 
                 player.skip()  # TODO: check autopause stuff here
                 await self._manual_delete_check(message)
-                return Response(self.str.get('cmd-skip-force', 'Force skipped `{}`.').format(player.current_entry.title), reply=True, delete_after=30)
+                return Response(self.str.get('cmd-skip-force', '強制的に `{}`をスキップしました。').format(player.current_entry.title), reply=True, delete_after=30)
             else:
-                raise exceptions.PermissionsError(self.str.get('cmd-skip-force-noperms', 'You do not have permission to force skip.'), expire_in=30)
+                raise exceptions.PermissionsError(self.str.get('cmd-skip-force-noperms', 'スキップを強制する権限がありません。'), expire_in=30)
 
         # TODO: ignore person if they're deaf or take them out of the list or something?
         # Currently is recounted if they vote, deafen, then vote
@@ -2197,9 +2197,9 @@ class MusicBot(discord.Client):
         if skips_remaining <= 0:
             player.skip()  # check autopause stuff here
             return Response(
-                self.str.get('cmd-skip-reply-skipped-1', 'Your skip for `{0}` was acknowledged.\nThe vote to skip has been passed.{1}').format(
+                self.str.get('cmd-skip-reply-skipped-1', '{0}のスキップが承認されました\スキップする投票が成功しました。{1}').format(
                     player.current_entry.title,
-                    self.str.get('cmd-skip-reply-skipped-2', ' Next song coming up!') if player.playlist.peek() else ''
+                    self.str.get('cmd-skip-reply-skipped-2', ' 次の曲が登場！') if player.playlist.peek() else ''
                 ),
                 reply=True,
                 delete_after=20
@@ -2208,10 +2208,10 @@ class MusicBot(discord.Client):
         else:
             # TODO: When a song gets skipped, delete the old x needed to skip messages
             return Response(
-                self.str.get('cmd-skip-reply-voted-1', 'Your skip for `{0}` was acknowledged.\n**{1}** more {2} required to vote to skip this song.').format(
+                self.str.get('cmd-skip-reply-voted-1', 'この曲をスキップするために投票するには、{0}のスキップが承認されました\n **{1}** または {2}が必要です。').format(
                     player.current_entry.title,
                     skips_remaining,
-                    self.str.get('cmd-skip-reply-voted-2', 'person is') if skips_remaining == 1 else self.str.get('cmd-skip-reply-voted-3', 'people are')
+                    self.str.get('cmd-skip-reply-voted-2', '人は') if skips_remaining == 1 else self.str.get('cmd-skip-reply-voted-3', 'people are')
                 ),
                 reply=True,
                 delete_after=20
@@ -2219,15 +2219,15 @@ class MusicBot(discord.Client):
 
     async def cmd_volume(self, message, player, new_volume=None):
         """
-        Usage:
+        使用法:
             {command_prefix}volume (+/-)[volume]
 
-        Sets the playback volume. Accepted values are from 1 to 100.
-        Putting + or - before the volume will make the volume change relative to the current volume.
+        再生音量を設定します。指定できる値は1〜100です。
+        ボリュームの前に+または - を置くと、現在のボリュームを基準としてボリュームが変更されます。
         """
 
         if not new_volume:
-            return Response(self.str.get('cmd-volume-current', 'Current volume: `%s%%`') % int(player.volume * 100), reply=True, delete_after=20)
+            return Response(self.str.get('cmd-volume-current', '現在のボリューム： `%s%%`') % int(player.volume * 100), reply=True, delete_after=20)
 
         relative = False
         if new_volume[0] in '+-':
@@ -2237,7 +2237,7 @@ class MusicBot(discord.Client):
             new_volume = int(new_volume)
 
         except ValueError:
-            raise exceptions.CommandError(self.str.get('cmd-volume-invalid', '`{0}` is not a valid number').format(new_volume), expire_in=20)
+            raise exceptions.CommandError(self.str.get('cmd-volume-invalid', '`{0}`は有効な番号ではありません').format(new_volume), expire_in=20)
 
         vol_change = None
         if relative:
@@ -2249,16 +2249,16 @@ class MusicBot(discord.Client):
         if 0 < new_volume <= 100:
             player.volume = new_volume / 100.0
 
-            return Response(self.str.get('cmd-volume-reply', 'Updated volume from **%d** to **%d**') % (old_volume, new_volume), reply=True, delete_after=20)
+            return Response(self.str.get('cmd-volume-reply', 'ボリュームを**%d**から**%d**に更新しました。') % (old_volume, new_volume), reply=True, delete_after=20)
 
         else:
             if relative:
                 raise exceptions.CommandError(
-                    self.str.get('cmd-volume-unreasonable-relative', 'Unreasonable volume change provided: {}{:+} -> {}%.  Provide a change between {} and {:+}.').format(
+                    self.str.get('cmd-volume-unreasonable-relative', '不合理なボリュームの変更が提供されました:{} {:+} -> {}%{}と{:+}の間に変更を加えます。').format(
                         old_volume, vol_change, old_volume + vol_change, 1 - old_volume, 100 - old_volume), expire_in=20)
             else:
                 raise exceptions.CommandError(
-                    self.str.get('cmd-volume-unreasonable-absolute', 'Unreasonable volume provided: {}%. Provide a value between 1 and 100.').format(new_volume), expire_in=20)
+                    self.str.get('cmd-volume-unreasonable-absolute', '不合理な量が提供されました：{}％。 1〜100の値を指定します。').format(new_volume), expire_in=20)
 
     @owner_only
     async def cmd_option(self, player, option, value):
@@ -2376,7 +2376,7 @@ class MusicBot(discord.Client):
             float(search_range)  # lazy check
             search_range = min(int(search_range), 1000)
         except:
-            return Response(self.str.get('cmd-clean-invalid', "Invalid parameter. Please provide a number of messages to search."), reply=True, delete_after=8)
+             return Response(self.str.get('cmd-clean-invalid', "Invalid parameter. Please provide a number of messages to search."), reply=True, delete_after=8)
 
         await self.safe_delete_message(message, quiet=True)
 
@@ -2396,23 +2396,23 @@ class MusicBot(discord.Client):
         if self.user.bot:
             if channel.permissions_for(server.me).manage_messages:
                 deleted = await self.purge_from(channel, check=check, limit=search_range, before=message)
-                return Response(self.str.get('cmd-clean-reply', 'Cleaned up {0} message{1}.').format(len(deleted), 's' * bool(deleted)), delete_after=15)
+                return Response(self.str.get('cmd-clean-reply', '{0}メッセージ{1}をクリーンアップしました。').format(len(deleted), 's' * bool(deleted)), delete_after=15)
 
     async def cmd_pldump(self, channel, song_url):
         """
-        Usage:
+        使用法:
             {command_prefix}pldump url
 
-        Dumps the individual urls of a playlist
+        プレイリストの個々のURLをダンプします。
         """
 
         try:
             info = await self.downloader.extract_info(self.loop, song_url.strip('<>'), download=False, process=False)
         except Exception as e:
-            raise exceptions.CommandError("Could not extract info from input url\n%s\n" % e, expire_in=25)
+            raise exceptions.CommandError("入力URLから情報を抽出できませんでした\n%s\n" % e, expire_in=25)
 
         if not info:
-            raise exceptions.CommandError("Could not extract info from input url, no data.", expire_in=25)
+            raise exceptions.CommandError("データがない入力URLから情報を抽出できませんでした。", expire_in=25)
 
         if not info.get('entries', None):
             # TODO: Retarded playlist checking
