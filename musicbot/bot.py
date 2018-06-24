@@ -778,11 +778,7 @@ class MusicBot(discord.Client):
             dir = 'data/%s/queue.json' % server.id
 
         async with self.aiolocks['queue_serialization'+':'+server.id]:
-<<<<<<< HEAD
             log.debug("%sサーバーのリクエストをシリアライズしています", server.id)
-=======
-            log.debug("%sのリクエストをシリアライズしています", server.id)
->>>>>>> cafb625a5398f51b089af202920cc83837f217e0
 
             with open(dir, 'w', encoding='utf8') as f:
                 f.write(player.serialize(sort_keys=True))
@@ -805,12 +801,7 @@ class MusicBot(discord.Client):
         async with self.aiolocks['queue_serialization' + ':' + server.id]:
             if not os.path.isfile(dir):
                 return None
-
-<<<<<<< HEAD
-            log.debug("%sサーバーのデシリアライズリクエスト", server.id)
-=======
             log.debug("%sのデシリアライズリクエスト", server.id)
->>>>>>> cafb625a5398f51b089af202920cc83837f217e0
 
             with open(dir, 'r', encoding='utf8') as f:
                 data = f.read()
@@ -1298,14 +1289,7 @@ class MusicBot(discord.Client):
         使用法:
             {command_prefix}play song_link
 
-<<<<<<< HEAD
         リクエストに曲を追加します。
-        YouTube検索機能は廃止されました。
-実行するとエラーが出ます。
-=======
-        プレイリストに曲を追加します。リンクが提供されていない場合、最初のリンク
-        YouTube検索の結果がリクエストに追加されます。
->>>>>>> cafb625a5398f51b089af202920cc83837f217e0
         """
 
         song_url = song_url.strip('<>')
@@ -1892,7 +1876,7 @@ class MusicBot(discord.Client):
         使用法:
             {command_prefix}skip
 
-        十分な票が投​​げられたとき、またはボットの所有者が現在の曲をスキップします。
+        十分な投票があるとき、またはボットの所有者が現在の曲をスキップします。
         """
 
         if player.is_stopped:
@@ -2081,11 +2065,7 @@ class MusicBot(discord.Client):
         if self.user.bot:
             if channel.permissions_for(server.me).manage_messages:
                 deleted = await self.purge_from(channel, check=check, limit=search_range, before=message)
-<<<<<<< HEAD
-                return Response('{}個のメッセージをクリーンアップしました。'.format(len(deleted), 's' * bool(deleted)), delete_after=15)
-=======
                 return Response('{}メッセージ{}をクリーンアップしました。'.format(len(deleted), 's' * bool(deleted)), delete_after=15)
->>>>>>> cafb625a5398f51b089af202920cc83837f217e0
 
         deleted = 0
         async for entry in self.logs_from(channel, search_range, before=message):
@@ -2109,11 +2089,8 @@ class MusicBot(discord.Client):
                     except discord.HTTPException:
                         pass
 
-<<<<<<< HEAD
-        return Response('{}個のメッセージをクリーンアップしました。'.format(deleted, 's' * bool(deleted)), delete_after=6)
-=======
+
         return Response('{}メッセージ{}をクリーンアップしました。'.format(deleted, 's' * bool(deleted)), delete_after=6)
->>>>>>> cafb625a5398f51b089af202920cc83837f217e0
 
     async def cmd_pldump(self, channel, song_url):
         """
@@ -2241,19 +2218,11 @@ class MusicBot(discord.Client):
     @owner_only
     async def cmd_setname(self, leftover_args, name):
         """
-<<<<<<< HEAD
-使用法:
-{command_prefix}setname name
-
-ボットのユーザ名を変更します。
-注：この操作は、不一致によって時間当たり2回に制限されます。
-=======
         使用法:
             {command_prefix}setname name
 
         ボットのユーザ名を変更します。
         注：この操作は、不一致によって時間当たり2回に制限されます。
->>>>>>> cafb625a5398f51b089af202920cc83837f217e0
         """
 
         name = ' '.join([name, *leftover_args])
@@ -2273,17 +2242,10 @@ class MusicBot(discord.Client):
 
     async def cmd_setnick(self, server, channel, leftover_args, nick):
         """
-<<<<<<< HEAD
-使用法:
- {command_prefix}setnick nick
-
-ボットのニックネームを変更します。
-=======
         使用法:
             {command_prefix}setnick nick
 
         ボットのニックネームを変更します。
->>>>>>> cafb625a5398f51b089af202920cc83837f217e0
         """
 
         if not channel.permissions_for(server.me).change_nickname:
@@ -2301,19 +2263,11 @@ class MusicBot(discord.Client):
     @owner_only
     async def cmd_setavatar(self, message, url=None):
         """
-<<<<<<< HEAD
-使用法:
- {command_prefix}setavatar [url]
-
-ボットのアバターを変更します。
-ファイルをアタッチしてurlパラメータを空白のままにしても機能します。
-=======
         使用法:
             {command_prefix}setavatar [url]
 
         ボットのアバターを変更します。
         ファイルをアタッチしてurlパラメータを空白のままにしても機能します。
->>>>>>> cafb625a5398f51b089af202920cc83837f217e0
         """
 
         if message.attachments:
@@ -2622,22 +2576,16 @@ class MusicBot(discord.Client):
         if not self.config.auto_pause:
             return
 
-<<<<<<< HEAD
-        autopause_msg = "{channel.server.name} / {channel.name} {reason}は{state}"
-=======
+
         autopause_msg = "{state}の{channel.server.name} / {channel.name} {reason}"
->>>>>>> cafb625a5398f51b089af202920cc83837f217e0
 
         auto_paused = self.server_specific_data[after.server]['auto_paused']
         player = await self.get_player(state.my_voice_channel)
 
         if state.joining and state.empty() and player.is_playing:
             log.info(autopause_msg.format(
-<<<<<<< HEAD
-                state = "一時停止中です。",
-=======
+
                 state = "一時停止中",
->>>>>>> cafb625a5398f51b089af202920cc83837f217e0
                 channel = state.my_voice_channel,
                 reason = "(空のチャンネルに参加する)"
             ).strip())
@@ -2650,11 +2598,8 @@ class MusicBot(discord.Client):
             if not state.empty(old_channel=state.leaving):
                 if auto_paused and player.is_paused:
                     log.info(autopause_msg.format(
-<<<<<<< HEAD
-                        state = "一時停止を解除しました。",
-=======
+
                         state = "一時停止解除",
->>>>>>> cafb625a5398f51b089af202920cc83837f217e0
                         channel = state.my_voice_channel,
                         reason = ""
                     ).strip())
