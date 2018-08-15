@@ -2149,12 +2149,8 @@ class MusicBot(discord.Client):
         使用法:
             {command_prefix}skip [force/f]
 
-<<<<<<< HEAD
         十分な票が投​​げられたら、現在の曲をスキップします。
         所有者とinstaskip権限を持つユーザーは、スキップを強制するコマンドの後に 'force'または 'f'を追加できます。
-=======
-        十分な投票があるとき、またはボットの所有者が現在の曲をスキップします。
->>>>>>> 63e9e292756568775b5e331283361dcc563666bb
         """
 
         if player.is_stopped:
@@ -2400,36 +2396,7 @@ class MusicBot(discord.Client):
         if self.user.bot:
             if channel.permissions_for(server.me).manage_messages:
                 deleted = await self.purge_from(channel, check=check, limit=search_range, before=message)
-<<<<<<< HEAD
                 return Response(self.str.get('cmd-clean-reply', '{0}メッセージ{1}をクリーンアップしました。').format(len(deleted), 's' * bool(deleted)), delete_after=15)
-=======
-                return Response('{}メッセージ{}をクリーンアップしました。'.format(len(deleted), 's' * bool(deleted)), delete_after=15)
-
-        deleted = 0
-        async for entry in self.logs_from(channel, search_range, before=message):
-            if entry == self.server_specific_data[channel.server]['last_np_msg']:
-                continue
-
-            if entry.author == self.user:
-                await self.safe_delete_message(entry)
-                deleted += 1
-                await asyncio.sleep(0.21)
-
-            if is_possible_command_invoke(entry) and delete_invokes:
-                if delete_all or entry.author == author:
-                    try:
-                        await self.delete_message(entry)
-                        await asyncio.sleep(0.21)
-                        deleted += 1
-
-                    except discord.Forbidden:
-                        delete_invokes = False
-                    except discord.HTTPException:
-                        pass
-
-
-        return Response('{}メッセージ{}をクリーンアップしました。'.format(deleted, 's' * bool(deleted)), delete_after=6)
->>>>>>> 63e9e292756568775b5e331283361dcc563666bb
 
     async def cmd_pldump(self, channel, song_url):
         """
@@ -2996,12 +2963,9 @@ class MusicBot(discord.Client):
 
         if state.joining and state.empty() and player.is_playing:
             log.info(autopause_msg.format(
-<<<<<<< HEAD
                 state = "を、一時停止中",
-=======
 
                 state = "一時停止中",
->>>>>>> 63e9e292756568775b5e331283361dcc563666bb
                 channel = state.my_voice_channel,
                 reason = "(空のチャンネルに参加する)"
             ).strip())
@@ -3014,12 +2978,7 @@ class MusicBot(discord.Client):
             if not state.empty(old_channel=state.leaving):
                 if auto_paused and player.is_paused:
                     log.info(autopause_msg.format(
-<<<<<<< HEAD
                         state = "の、一時停止を解除",
-=======
-
-                        state = "一時停止解除",
->>>>>>> 63e9e292756568775b5e331283361dcc563666bb
                         channel = state.my_voice_channel,
                         reason = ""
                     ).strip())
