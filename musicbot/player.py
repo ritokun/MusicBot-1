@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 
 class PatchedBuff:
     """
-        PatchedBuff monkey patches a readable object, allowing you to vary what the volume is as the song is playing.
+        PatchedBuffモンキーは読み込み可能なオブジェクトにパッチを当てるので、ソングの再生中の音量を変更することができます。
     """
 
     def __init__(self, buff, *, draw=False):
@@ -153,7 +153,7 @@ class MusicPlayer(EventEmitter, Serializable):
             self._kill_current_player()
             return
 
-        raise ValueError('Cannot resume playback from state %s' % self.state)
+        raise ValueError('状態%sから再生を再開できません' % self.state)
 
     def pause(self):
         if self.is_playing:
@@ -168,7 +168,7 @@ class MusicPlayer(EventEmitter, Serializable):
         elif self.is_paused:
             return
 
-        raise ValueError('Cannot pause a MusicPlayer in state %s' % self.state)
+        raise ValueError('状態%sの音楽プレーヤーを一時停止できません' % self.state)
 
     def kill(self):
         self.state = MusicPlayerState.DEAD
@@ -196,10 +196,10 @@ class MusicPlayer(EventEmitter, Serializable):
         if not self.bot.config.save_videos and entry:
             if not isinstance(entry, StreamPlaylistEntry):
                 if any([entry.filename == e.filename for e in self.playlist.entries]):
-                    log.debug("Skipping deletion of \"{}\", found song in queue".format(entry.filename))
+                    log.debug("\"{}\"の削除をスキップし、キュー内の曲を見つけました".format(entry.filename))
 
                 else:
-                    log.debug("Deleting file: {}".format(os.path.relpath(entry.filename)))
+                    log.debug("ファイルの削除: {}".format(os.path.relpath(entry.filename)))
                     asyncio.ensure_future(self._delete_file(entry.filename))
 
         self.emit('finished-playing', player=self, entry=entry)
@@ -227,13 +227,13 @@ class MusicPlayer(EventEmitter, Serializable):
                 if e.winerror == 32:  # File is in use
                     await asyncio.sleep(0.25)
             except FileNotFoundError:
-                log.debug('Could not find delete {} as it was not found. Skipping.'.format(filename), exc_info=True)
+                log.debug('見つからなかったため、削除{}が見つかりませんでした。スキップする。'.format(filename), exc_info=True)
                 break
             except Exception:
-                log.error("Error trying to delete {}".format(filename), exc_info=True)
+                log.error("{}を削除しようとしてエラーが発生しました".format(filename), exc_info=True)
                 break
         else:
-            print("[Config:SaveVideos] Could not delete file {}, giving up and moving on".format(
+            print("[Config:SaveVideos]ファイル{}を削除できませんでした。あきらめて移動しました".format(
                 os.path.relpath(filename)))
 
     def play(self, _continue=False):
@@ -266,7 +266,7 @@ class MusicPlayer(EventEmitter, Serializable):
         return None
 
     def get_mean_volume(self, input_file):
-        log.debug('Calculating mean volume of {0}'.format(input_file))
+        log.debug('{0}の平均容積を計算する。'.format(input_file))
         cmd = '"' + self.get('ffmpeg') + '" -i "' + input_file + '" -af "volumedetect" -f null /dev/null'
         # print('===', cmd)
         try:
@@ -287,12 +287,12 @@ class MusicPlayer(EventEmitter, Serializable):
         else:
             max_volume = float(0)
 
-        log.debug('Calculated mean volume as {0}'.format(mean_volume))
+        log.debug('計算された平均容積は{0} '.format(mean_volume))
         return mean_volume, max_volume
 
     async def _play(self, _continue=False):
         """
-            Plays the next entry from the playlist, or resumes playback of the current entry if paused.
+            プレイリストから次のエントリを再生するか、一時停止している場合は現在のエントリの再生を再開します。
         """
         if self.is_paused:
             return self.resume()
@@ -327,7 +327,7 @@ class MusicPlayer(EventEmitter, Serializable):
                 else:
                     aoptions = "-vn"
                 
-                log.ffmpeg("Creating player with options: {} {} {}".format(boptions, aoptions, entry.filename))
+                log.ffmpeg("オプション付きプレーヤーの作成: {} {} {}".format(boptions, aoptions, entry.filename))
 
                 self._current_player = self._monkeypatch_player(self.voice_client.create_ffmpeg_player(
                     entry.filename,
@@ -378,7 +378,7 @@ class MusicPlayer(EventEmitter, Serializable):
                     await self.voice_client.ws.ensure_open()
 
             except InvalidState:
-                log.debug("Voice websocket for \"{}\" is {}, reconnecting".format(
+                log.debug("\"{}\"の音声ウェブソケットは{}、再接続しています".format(
                     self.voice_client.channel.server,
                     self.voice_client.ws.state_name
                 ))
@@ -386,7 +386,7 @@ class MusicPlayer(EventEmitter, Serializable):
                 await asyncio.sleep(3)
 
             except Exception:
-                log.error("Error in websocket check loop", exc_info=True)
+                log.error("WebSocketチェックループのエラー", exc_info=True)
 
             finally:
                 await asyncio.sleep(1)
@@ -468,14 +468,14 @@ def filter_stderr(popen:subprocess.Popen, future:asyncio.Future):
     while True:
         data = popen.stderr.readline()
         if data:
-            log.ffmpeg("Data from ffmpeg: {}".format(data))
+            log.ffmpeg("ffmpegからのデータ: {}".format(data))
             try:
                 if check_stderr(data):
                     sys.stderr.buffer.write(data)
                     sys.stderr.buffer.flush()
 
             except FFmpegError as e:
-                log.ffmpeg("Error from ffmpeg: %s", str(e).strip())
+                log.ffmpeg("ffmpegからのエラー:%s", str(e).strip())
                 last_ex = e
 
             except FFmpegWarning:
@@ -492,23 +492,23 @@ def check_stderr(data:bytes):
     try:
         data = data.decode('utf8')
     except:
-        log.ffmpeg("Unknown error decoding message from ffmpeg", exc_info=True)
+        log.ffmpeg("ffmpegからメッセージを解読するのに不明なエラーがあります", exc_info=True)
         return True # fuck it
 
     # log.ffmpeg("Decoded data from ffmpeg: {}".format(data))
 
     # TODO: Regex
     warnings = [
-        "Header missing",
-        "Estimating duration from birate, this may be inaccurate",
-        "Using AVStream.codec to pass codec parameters to muxers is deprecated, use AVStream.codecpar instead.",
-        "Application provided invalid, non monotonically increasing dts to muxer in stream",
-        "Last message repeated",
-        "Failed to send close message",
-        "decode_band_types: Input buffer exhausted before END element found"
+        "ヘッダーがありません",
+        "ビットレートからの継続時間の見積もり、これは不正確かもしれません",
+        "AVStream.codecを使用してコーデックパラメータをマルチプレクサに渡すことは推奨されていません。代わりにAVStream.codecparを使用してください。",
+        "アプリケーションがストリームでマルチプレクサに無効で単調に増加するdtsを提供",
+        "最後のメッセージが繰り返される",
+        "閉じるメッセージを送信できませんでした",
+        "decode_band_types：END要素が見つかる前に入力バッファが使い果たされた"
     ]
     errors = [
-        "Invalid data found when processing input", # need to regex this properly, its both a warning and an error
+        "入力処理時に無効なデータが見つかりました", # need to regex this properly, its both a warning and an error
     ]
 
     if any(msg in data for msg in warnings):

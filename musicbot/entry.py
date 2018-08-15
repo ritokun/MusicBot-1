@@ -38,8 +38,8 @@ class BasePlaylistEntry(Serializable):
 
     def get_ready_future(self):
         """
-        Returns a future that will fire when the song is ready to be played. The future will either fire with the result (being the entry) or an exception
-        as to why the song download failed.
+        曲を再生する準備ができたら起動する未来を返します。未来は結果（エントリー）または例外
+        なぜ曲のダウンロードに失敗したのかについて。
         """
         future = asyncio.Future()
         if self.is_downloaded:
@@ -56,7 +56,7 @@ class BasePlaylistEntry(Serializable):
 
     def _for_each_future(self, cb):
         """
-            Calls `cb` for each future that is not cancelled. Absorbs and logs any errors that may have occurred.
+            取り消されない未来ごとに `cb`を呼び出します。発生した可能性のあるエラーを吸収して記録します。
         """
         futures = self._waiting_futures
         self._waiting_futures = []
@@ -136,7 +136,7 @@ class URLPlaylistEntry(BasePlaylistEntry):
 
             return entry
         except Exception as e:
-            log.error("Could not load {}".format(cls.__name__), exc_info=e)
+            log.error("読み込めませんでした {}".format(cls.__name__), exc_info=e)
 
     # noinspection PyTypeChecker
     async def _download(self):
@@ -193,12 +193,12 @@ class URLPlaylistEntry(BasePlaylistEntry):
 
                 if expected_fname_base in ldir:
                     self.filename = os.path.join(self.download_folder, expected_fname_base)
-                    log.info("Download cached: {}".format(self.url))
+                    log.info("キャッシュをダウンロード:{}".format(self.url))
 
                 elif expected_fname_noex in flistdir:
-                    log.info("Download cached (different extension): {}".format(self.url))
+                    log.info("ダウンロードしたキャッシュ済み(別の拡張子) :{}".format(self.url))
                     self.filename = os.path.join(self.download_folder, ldir[flistdir.index(expected_fname_noex)])
-                    log.debug("Expected {}, got {}".format(
+                    log.debug("予想される{}、{}があります".format(
                         self.expected_filename.rsplit('.', 1)[-1],
                         self.filename.rsplit('.', 1)[-1]
                     ))
@@ -217,7 +217,7 @@ class URLPlaylistEntry(BasePlaylistEntry):
 
     # noinspection PyShadowingBuiltins
     async def _really_download(self, *, hash=False):
-        log.info("Download started: {}".format(self.url))
+        log.info("ダウンロード開始:{}".format(self.url))
 
         retry = True
         while retry:
@@ -227,11 +227,11 @@ class URLPlaylistEntry(BasePlaylistEntry):
             except Exception as e:
                 raise ExtractionError(e)
 
-        log.info("Download complete: {}".format(self.url))
+        log.info("ダウンロード完了: {}".format(self.url))
 
         if result is None:
-            log.critical("YTDL has failed, everyone panic")
-            raise ExtractionError("ytdl broke and hell if I know why")
+            log.critical("YTDLは失敗し、誰もが慌てて")
+            raise ExtractionError("理由を知っていれば、ytdlが壊れた")
             # What the fuck do I do now?
 
         self.filename = unhashed_fname = self.playlist.downloader.ytdl.prepare_filename(result)
@@ -304,7 +304,7 @@ class StreamPlaylistEntry(BasePlaylistEntry):
 
             return entry
         except Exception as e:
-            log.error("Could not load {}".format(cls.__name__), exc_info=e)
+            log.error("読み込めませんでした {}".format(cls.__name__), exc_info=e)
 
     # noinspection PyMethodOverriding
     async def _download(self, *, fallback=False):
