@@ -2,7 +2,7 @@
 # Site
 
 title: MusicBot JP
-description: The documentation for the original MusicBot for Discord.
+description: MusicBot JP
 url: "https://musicbot.mcpenano.net/"
 logo: 'images/logo.png'
 google_analytics_key: UA-122309997-2
@@ -13,7 +13,7 @@ permalink: pretty
 
 collections:
   docs:
-    title: Documentation
+    title: ドキュメンテーション
     permalink: /:path/
     output: true
 
