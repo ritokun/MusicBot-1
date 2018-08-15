@@ -2950,13 +2950,9 @@ class MusicBot(discord.Client):
 
         if not self.config.auto_pause:
             return
-
-<<<<<<< HEAD
         autopause_msg = "{channel.server.name}/{channel.name} {reason}  {state} "
-=======
 
         autopause_msg = "{state}の{channel.server.name} / {channel.name} {reason}"
->>>>>>> 63e9e292756568775b5e331283361dcc563666bb
 
         auto_paused = self.server_specific_data[after.server]['auto_paused']
         player = await self.get_player(state.my_voice_channel)
