@@ -5,6 +5,7 @@ import logging
 import asyncio
 import audioop
 import subprocess
+import re
 
 from enum import Enum
 from array import array
@@ -17,6 +18,7 @@ from .utils import avg, _func_
 from .lib.event_emitter import EventEmitter
 from .constructs import Serializable, Serializer
 from .exceptions import FFmpegError, FFmpegWarning
+from .entry import StreamPlaylistEntry
 
 log = logging.getLogger(__name__)
 
@@ -100,8 +102,10 @@ class MusicPlayer(EventEmitter, Serializable):
         self.loop = bot.loop
         self.voice_client = voice_client
         self.playlist = playlist
+        self.autoplaylist = None
         self.state = MusicPlayerState.STOPPED
         self.skip_state = None
+        self.karaoke_mode = False
 
         self._volume = bot.config.default_volume
         self._play_lock = asyncio.Lock()
@@ -190,12 +194,13 @@ class MusicPlayer(EventEmitter, Serializable):
             self.play(_continue=True)
 
         if not self.bot.config.save_videos and entry:
-            if any([entry.filename == e.filename for e in self.playlist.entries]):
-                log.debug("\"{}\"の削除をスキップし、リクエスト内の曲を見つけました".format(entry.filename))
+            if not isinstance(entry, StreamPlaylistEntry):
+                if any([entry.filename == e.filename for e in self.playlist.entries]):
+                    log.debug("\"{}\"の削除をスキップし、キュー内の曲を見つけました".format(entry.filename))
 
-            else:
-                log.debug("ファイルの削除: {}".format(os.path.relpath(entry.filename)))
-                asyncio.ensure_future(self._delete_file(entry.filename))
+                else:
+                    log.debug("ファイルの削除: {}".format(os.path.relpath(entry.filename)))
+                    asyncio.ensure_future(self._delete_file(entry.filename))
 
         self.emit('finished-playing', player=self, entry=entry)
 
@@ -218,20 +223,72 @@ class MusicPlayer(EventEmitter, Serializable):
             try:
                 os.unlink(filename)
                 break
-
             except PermissionError as e:
                 if e.winerror == 32:  # File is in use
                     await asyncio.sleep(0.25)
-
+            except FileNotFoundError:
+                log.debug('見つからなかったため、削除{}が見つかりませんでした。スキップする。'.format(filename), exc_info=True)
+                break
             except Exception:
                 log.error("{}を削除しようとしてエラーが発生しました".format(filename), exc_info=True)
                 break
         else:
-            print("[Config:SaveVideos] あきらめて移動しているファイル{}を削除できませんでした".format(
+            print("[Config:SaveVideos]ファイル{}を削除できませんでした。あきらめて移動しました".format(
                 os.path.relpath(filename)))
 
     def play(self, _continue=False):
         self.loop.create_task(self._play(_continue=_continue))
+        
+    def run_command(self, cmd):
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        stdout, stderr = p.communicate()
+        return stdout + stderr
+
+    def get(self, program):
+        def is_exe(fpath):
+            found = os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+            if not found and sys.platform == 'win32':
+                fpath = fpath + ".exe"
+                found = os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+            return found
+
+        fpath, __ = os.path.split(program)
+        if fpath:
+            if is_exe(program):
+                return program
+        else:
+            for path in os.environ["PATH"].split(os.pathsep):
+                path = path.strip('"')
+                exe_file = os.path.join(path, program)
+                if is_exe(exe_file):
+                    return exe_file
+
+        return None
+
+    def get_mean_volume(self, input_file):
+        log.debug('{0}の平均容積を計算する。'.format(input_file))
+        cmd = '"' + self.get('ffmpeg') + '" -i "' + input_file + '" -af "volumedetect" -f null /dev/null'
+        # print('===', cmd)
+        try:
+            output = self.run_command(cmd)
+        except Exception as e:
+            raise e
+        output = output.decode("utf-8")
+        # print('----', output)
+        mean_volume_matches = re.findall(r"mean_volume: ([\-\d\.]+) dB", output)
+        if (mean_volume_matches):
+            mean_volume = float(mean_volume_matches[0])
+        else:
+            mean_volume = float(0)
+
+        max_volume_matches = re.findall(r"max_volume: ([\-\d\.]+) dB", output)
+        if (max_volume_matches):
+            max_volume = float(max_volume_matches[0])
+        else:
+            max_volume = float(0)
+
+        log.debug('計算された平均容積は{0} '.format(mean_volume))
+        return mean_volume, max_volume
 
     async def _play(self, _continue=False):
         """
@@ -247,9 +304,8 @@ class MusicPlayer(EventEmitter, Serializable):
             if self.is_stopped or _continue:
                 try:
                     entry = await self.playlist.get_next_entry()
-
                 except:
-                    log.warning("エントリを取得できませんでした。再試行しました", exc_info=True)
+                    log.warning("Failed to get entry, retrying", exc_info=True)
                     self.loop.call_later(0.1, self.play)
                     return
 
@@ -263,8 +319,14 @@ class MusicPlayer(EventEmitter, Serializable):
 
                 boptions = "-nostdin"
                 # aoptions = "-vn -b:a 192k"
-                aoptions = "-vn"
-
+                if self.bot.config.use_experimental_equalization and not isinstance(entry, StreamPlaylistEntry):
+                    mean, maximum = self.get_mean_volume(entry.filename)
+                    
+                    aoptions = '-af "volume={}dB"'.format((maximum * -1))
+                    
+                else:
+                    aoptions = "-vn"
+                
                 log.ffmpeg("オプション付きプレーヤーの作成: {} {} {}".format(boptions, aoptions, entry.filename))
 
                 self._current_player = self._monkeypatch_player(self.voice_client.create_ffmpeg_player(
@@ -286,7 +348,7 @@ class MusicPlayer(EventEmitter, Serializable):
                 stderr_thread = Thread(
                     target=filter_stderr,
                     args=(self._current_player.process, self._stderr_future),
-                    name="{} stderrリーダー".format(self._current_player.name)
+                    name="{} stderr reader".format(self._current_player.name)
                 )
 
                 stderr_thread.start()
@@ -308,7 +370,7 @@ class MusicPlayer(EventEmitter, Serializable):
                 self._current_player._connected.set()
 
     async def websocket_check(self):
-        log.voicedebug("{}用のWebSocketチェックループを開始しています".format(self.voice_client.channel.server))
+        log.voicedebug("Starting websocket check loop for {}".format(self.voice_client.channel.server))
 
         while not self.is_dead:
             try:
@@ -366,7 +428,7 @@ class MusicPlayer(EventEmitter, Serializable):
         try:
             return json.loads(raw_json, object_hook=Serializer.deserialize)
         except:
-            log.exception("プレーヤーをデシリアライズできませんでした")
+            log.exception("Failed to deserialize player")
 
 
     @property
@@ -413,7 +475,7 @@ def filter_stderr(popen:subprocess.Popen, future:asyncio.Future):
                     sys.stderr.buffer.flush()
 
             except FFmpegError as e:
-                log.ffmpeg("ffmpegからのエラー: %s", str(e).strip())
+                log.ffmpeg("ffmpegからのエラー:%s", str(e).strip())
                 last_ex = e
 
             except FFmpegWarning:
@@ -433,7 +495,7 @@ def check_stderr(data:bytes):
         log.ffmpeg("ffmpegからメッセージを解読するのに不明なエラーがあります", exc_info=True)
         return True # fuck it
 
-   # ffmpeg("ffmpegからデコードされたデータ: {}".format(data))
+    # log.ffmpeg("Decoded data from ffmpeg: {}".format(data))
 
     # TODO: Regex
     warnings = [
@@ -443,7 +505,7 @@ def check_stderr(data:bytes):
         "アプリケーションがストリームでマルチプレクサに無効で単調に増加するdtsを提供",
         "最後のメッセージが繰り返される",
         "閉じるメッセージを送信できませんでした",
-        "decode_band_types: END要素の前に入力バッファが使い果たされた"
+        "decode_band_types：END要素が見つかる前に入力バッファが使い果たされた"
     ]
     errors = [
         "入力処理時に無効なデータが見つかりました", # need to regex this properly, its both a warning and an error

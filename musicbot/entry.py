@@ -51,6 +51,7 @@ class BasePlaylistEntry(Serializable):
             asyncio.ensure_future(self._download())
             self._waiting_futures.append(future)
 
+        log.debug('Created future for {0}'.format(self.filename))
         return future
 
     def _for_each_future(self, cb):
@@ -118,7 +119,7 @@ class URLPlaylistEntry(BasePlaylistEntry):
             url = data['url']
             title = data['title']
             duration = data['duration']
-            downloaded = data['downloaded']
+            downloaded = data['downloaded'] if playlist.bot.config.save_videos else False
             filename = data['filename'] if downloaded else None
             expected_filename = data['expected_filename']
             meta = {}
@@ -167,18 +168,18 @@ class URLPlaylistEntry(BasePlaylistEntry):
                         os.listdir(self.download_folder)[flistdir.index(expected_fname_noex)]
                     )
 
-                    # print("%sを%sに解決しました" % (self.expected_filename, lfile))
+                    # print("Resolved %s to %s" % (self.expected_filename, lfile))
                     lsize = os.path.getsize(lfile)
-                    # print("リモートサイズ：%sローカルサイズ" % (rsize, lsize))
+                    # print("Remote size: %s Local size: %s" % (rsize, lsize))
 
                     if lsize != rsize:
                         await self._really_download(hash=True)
                     else:
-                        # print("[Download] キャッシュ:", self.url)
+                        # print("[Download] Cached:", self.url)
                         self.filename = lfile
 
                 else:
-                    # print("キャッシュにファイルが見つかりません(%s)" % expected_fname_noex)
+                    # print("File not found in cache (%s)" % expected_fname_noex)
                     await self._really_download(hash=True)
 
             else:
@@ -195,7 +196,7 @@ class URLPlaylistEntry(BasePlaylistEntry):
                     log.info("キャッシュをダウンロード:{}".format(self.url))
 
                 elif expected_fname_noex in flistdir:
-                    log.info("ダウンロードしたキャッシュ済み(別の拡張子): {}".format(self.url))
+                    log.info("ダウンロードしたキャッシュ済み(別の拡張子) :{}".format(self.url))
                     self.filename = os.path.join(self.download_folder, ldir[flistdir.index(expected_fname_noex)])
                     log.debug("予想される{}、{}があります".format(
                         self.expected_filename.rsplit('.', 1)[-1],
@@ -216,7 +217,7 @@ class URLPlaylistEntry(BasePlaylistEntry):
 
     # noinspection PyShadowingBuiltins
     async def _really_download(self, *, hash=False):
-        log.info("ダウンロード開始: {}".format(self.url))
+        log.info("ダウンロード開始:{}".format(self.url))
 
         retry = True
         while retry:
@@ -226,10 +227,10 @@ class URLPlaylistEntry(BasePlaylistEntry):
             except Exception as e:
                 raise ExtractionError(e)
 
-        log.info("ダウンロード完了:{}".format(self.url))
+        log.info("ダウンロード完了: {}".format(self.url))
 
         if result is None:
-            log.critical("YTDLが失敗した、誰もが慌てて")
+            log.critical("YTDLは失敗し、誰もが慌てて")
             raise ExtractionError("理由を知っていれば、ytdlが壊れた")
             # What the fuck do I do now?
 

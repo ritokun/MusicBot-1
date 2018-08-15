@@ -9,6 +9,7 @@ import traceback
 import subprocess
 
 from shutil import disk_usage, rmtree
+from base64 import b64decode
 
 try:
     import pathlib
@@ -38,7 +39,7 @@ class PIP(object):
             return e.returncode
         except:
             traceback.print_exc()
-            print("-mメソッドによるエラー")
+            print("Error using -m method")
 
     @classmethod
     def run_python_m(cls, *args, **kwargs):
@@ -106,7 +107,7 @@ class PIP(object):
             if expectedversion.startswith('Version: '):
                 return expectedversion.split()[1]
             else:
-                return [x.split()[1] for x in datas if x.startswith("バージョン: ")][0]
+                return [x.split()[1] for x in datas if x.startswith("Version: ")][0]
         except:
             pass
 
@@ -184,7 +185,7 @@ def bugger_off(msg="Enterキーを押して続行します...", code=1):
 
 # TODO: all of this
 def sanity_checks(optional=True):
-    log.info("チェックの開始")
+    log.info("サニティチェックの開始")
     ## Required
 
     # Make sure we're on Python 3.5+
@@ -199,7 +200,7 @@ def sanity_checks(optional=True):
     # Make our folders if needed
     req_ensure_folders()
 
-    log.info("必要なチェックが合格しました。")
+    log.info("必要なチェックが完了しました。")
 
     ## Optional
     if not optional:
@@ -208,7 +209,7 @@ def sanity_checks(optional=True):
     # Check disk usage
     opt_check_disk_space()
 
-    log.info("オプションのチェックが合格しました。")
+    log.info("オプションのチェックが完了しました。")
 
 
 def req_ensure_py3():
@@ -235,7 +236,7 @@ def req_ensure_py3():
                     pass
 
             if pycom:
-                log.info("Python 3 found.  Launching bot...")
+                log.info("Python 3が見つかりました。ボットを起動...")
                 pyexec(pycom, 'run.py')
 
                 # I hope ^ works
@@ -250,10 +251,10 @@ def req_ensure_py3():
                 pass
 
             if pycom:
-                log.info("\nPython 3 found.  Re-launching bot using: %s run.py\n", pycom)
+                log.info("\n Python 3が見つかりました。ボットを再起動する: %s run.py\n", pycom)
                 pyexec(pycom, 'run.py')
 
-        log.critical("Could not find Python 3.5 or higher.  Please run the bot using Python 3.5")
+        log.critical("Python 3.5以降は見つかりませんでした。 Python 3.5を使ってボットを実行してください")
         bugger_off()
 
 
@@ -274,12 +275,15 @@ def req_ensure_encoding():
 
 
 def req_ensure_env():
-    log.info("私たちが正しい環境にいることを保証する")
+    log.info("正しい環境にいることを保証します。")
+
+    if os.environ.get('APP_ENV') != 'docker' and not os.path.isdir(b64decode('LmdpdA==').decode('utf-8')):
+        log.critical(b64decode('Qm90IHdhc24ndCBpbnN0YWxsZWQgdXNpbmcgR2l0LiBSZWluc3RhbGwgdXNpbmcgaHR0cDovL2JpdC5seS9tdXNpY2JvdGRvY3Mu').decode('utf-8'))
+        bugger_off()
 
     try:
         assert os.path.isdir('config'), 'folder "config" not found'
         assert os.path.isdir('musicbot'), 'folder "musicbot" not found'
-        assert os.path.isdir('.git'), 'bot was not installed using Git. If you downloaded a ZIP, you did it wrong. Open http://bit.ly/dmbguide on your browser for official install steps.'
         assert os.path.isfile('musicbot/__init__.py'), 'musicbot folder is not a Python module'
 
         assert importlib.util.find_spec('musicbot'), "musicbot module is not importable"
@@ -290,14 +294,14 @@ def req_ensure_env():
     try:
         os.mkdir('musicbot-test-folder')
     except Exception:
-        log.critical("Current working directory does not seem to be writable")
-        log.critical("Please move the bot to a folder that is writable")
+        log.critical("現在の作業ディレクトリは書き込み可能ではないようです")
+        log.critical("ボットを書き込み可能なフォルダに移動してください")
         bugger_off()
     finally:
         rmtree('musicbot-test-folder', True)
 
     if sys.platform.startswith('win'):
-        log.info("Adding local bins/ folder to path")
+        log.info("local bins/フォルダをパスに追加する")
         os.environ['PATH'] += ';' + os.path.abspath('bin/')
         sys.path.append(os.path.abspath('bin/')) # might as well
 
@@ -316,9 +320,6 @@ def opt_check_disk_space(warnlimit_mb=200):
 def pyexec(pycom, *args, pycom2=None):
     pycom2 = pycom2 or pycom
     os.execlp(pycom, pycom2, *args)
-
-def restart(*args):
-    pyexec(sys.executable, *args, *sys.argv, pycom2='python')
 
 
 def main():
@@ -347,7 +348,6 @@ def main():
             m = MusicBot()
 
             sh.terminator = ''
-            log.info("接続")
             sh.terminator = '\n'
 
             m.run()
@@ -374,10 +374,10 @@ def main():
                     break
                 else:
                     print()
-                    log.info("Ok lets hope it worked")
+                    log.info("それがうまくいくことを望みます")
                     print()
             else:
-                log.exception("Unknown ImportError, exiting.")
+                log.exception("不明なImportError、終了します。")
                 break
 
         except Exception as e:
@@ -390,9 +390,10 @@ def main():
                     break
 
                 elif e.__class__.__name__ == "RestartSignal":
-                    restart()
+                    loops = 0
+                    pass
             else:
-                log.exception("Error starting bot")
+                log.exception("ボットを起動する際のエラー")
 
         finally:
             if not m or not m.init_ok:
@@ -410,8 +411,8 @@ def main():
             time.sleep(sleeptime)
 
     print()
-    log.info("すべて終了")
+    log.info("すべて完了。")
 
 
 if __name__ == '__main__':
-    main() 
+    main()
