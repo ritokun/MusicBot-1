@@ -822,11 +822,7 @@ class MusicBot(discord.Client):
             dir = 'data/%s/queue.json' % server.id
 
         async with self.aiolocks['queue_serialization'+':'+server.id]:
-<<<<<<< HEAD
             log.debug("サーバーID%sのキューをシリアライズしています", server.id)
-=======
-            log.debug("%sサーバーのリクエストをシリアライズしています", server.id)
->>>>>>> 63e9e292756568775b5e331283361dcc563666bb
 
             with open(dir, 'w', encoding='utf8') as f:
                 f.write(player.serialize(sort_keys=True))
@@ -849,12 +845,8 @@ class MusicBot(discord.Client):
         async with self.aiolocks['queue_serialization' + ':' + server.id]:
             if not os.path.isfile(dir):
                 return None
-<<<<<<< HEAD
 
             log.debug("%sのデシリアライズキュー", server.id)
-=======
-            log.debug("%sのデシリアライズリクエスト", server.id)
->>>>>>> 63e9e292756568775b5e331283361dcc563666bb
 
             with open(dir, 'r', encoding='utf8') as f:
                 data = f.read()
@@ -1424,16 +1416,12 @@ class MusicBot(discord.Client):
             {command_prefix}play text to search for
             {command_prefix}play spotify_uri
 
-<<<<<<< HEAD
         プレイリストに曲を追加します。リンクが提供されていない場合、最初のリンク
         YouTube検索の結果がキューに追加されます。
 
         設定で有効にすると、ボットはSpotify URIもサポートします
         メタデータ（曲名やアーティスト）を使用してYouTubeを検索します
         その曲に相当する。 Spotifyからストリーミングすることはできません。
-=======
-        リクエストに曲を追加します。
->>>>>>> 63e9e292756568775b5e331283361dcc563666bb
         """
 
         song_url = song_url.strip('<>')
