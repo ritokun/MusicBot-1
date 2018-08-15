@@ -2950,9 +2950,8 @@ class MusicBot(discord.Client):
 
         if not self.config.auto_pause:
             return
-        autopause_msg = "{channel.server.name}/{channel.name} {reason}  {state} "
 
-        autopause_msg = "{state}の{channel.server.name} / {channel.name} {reason}"
+        autopause_msg = "{channel.server.name}/{channel.name} {reason}  {state} "
 
         auto_paused = self.server_specific_data[after.server]['auto_paused']
         player = await self.get_player(state.my_voice_channel)
@@ -2960,8 +2959,6 @@ class MusicBot(discord.Client):
         if state.joining and state.empty() and player.is_playing:
             log.info(autopause_msg.format(
                 state = "を、一時停止中",
-
-                state = "一時停止中",
                 channel = state.my_voice_channel,
                 reason = "(空のチャンネルに参加する)"
             ).strip())
