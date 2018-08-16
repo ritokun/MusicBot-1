@@ -1,6 +1,6 @@
 ---
 title: Spotify
-category: Using the bot
+category: ボットの使用
 order: 5
 ---
 
