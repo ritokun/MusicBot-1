@@ -1,5 +1,5 @@
 ---
-title: 前書き
+title: トップページ
 ---
 
 <img class="doc-img" src="https://i.imgur.com/EZljY52.png" alt="Main" style="width: 750px;"/>
