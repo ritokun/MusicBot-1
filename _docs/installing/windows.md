@@ -19,4 +19,4 @@ MusicBot JPは、Windows 7,8、および10にもインストールできます�
 
 > Gitを使ってボットをクローンしておらず、代わりにGitHubからZIPファイルをダウンロードして実行しようとすると、エラーが発生します。
 
-その後、Git Bashを開いたフォルダに、 `MusicBot`というフォルダが表示されます。あなたのボットを[設定]({{site.baseurl}}/ using/configuration)し、` update.bat`を実行してその後、 `run.bat`を実行してMusicBot JPを起動します。
+その後、Git Bashを開いたフォルダに、 `MusicBot`というフォルダが表示されます。あなたのボットを[設定]({{site.baseurl}}/using/configuration)し、` update.bat`を実行してその後、 `run.bat`を実行してMusicBot JPを起動します。
