@@ -1,6 +1,6 @@
 ---
 title: Raspbian
-category: Installing the bot
+category: ボットのインストール
 order: 4
 ---
 
