@@ -6,7 +6,7 @@ order: 1
 
 <img class="doc-img" src="{{ site.baseurl }}/images/ubuntu.png" alt="Ubuntu" style="width: 75px; float: right;"/>
 
-Installing MusicBot on Ubuntu via the command line is the **recommended way to install the bot**, though the system dependencies differ depending on what version of Ubuntu you are using. Firstly, lets install the dependencies required for your system:
+コマンドラインからUbuntuにMusicBotをインストールすることは**推奨されています**システムの依存関係は使用しているUbuntuのバージョンによって異なります。まず、システムに必要な依存関係をインストールします。
 
 ## Ubuntu 14.04
 ~~~ bash
