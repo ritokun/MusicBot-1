@@ -1,10 +1,10 @@
 ---
-title: Troubleshooting
-category: Using the bot
+title: トラブルシューティング
+category: ボットの使用
 order: 6
 ---
 
-This is a table of common issues and solutions for the bot. Please check here before leaving an issue on GitHub or asking for help in our [support server](https://discord.gg/bots).
+This is a table of common issues and solutions for the bot. Please check here before leaving an issue on GitHub or asking for help in our [support server](https://discord.gg/DuN7jvh).
 
 Issue | Solution
 --- | ---
