@@ -1,6 +1,6 @@
 ---
-title: Commands
-category: Using the bot
+title: コマンド
+category: ボットの使用
 order: 2
 ---
 
