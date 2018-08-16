@@ -1,6 +1,6 @@
 ---
 title: CentOS
-category: Installing the bot
+category: ボットのインストール
 order: 6
 ---
 
