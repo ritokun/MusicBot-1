@@ -1,6 +1,6 @@
 ---
-title: Permissions
-category: Using the bot
+title: アクセス許可
+category: ボットの使用
 order: 3
 ---
 
