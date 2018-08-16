@@ -1,10 +1,10 @@
 ---
-title: Updating
-category: Using the bot
+title: アップデートする
+category: ボットの使用
 order: 4
 ---
 
-![GitHub release](https://img.shields.io/github/release/Just-Some-Bots/MusicBot.svg?style=flat-square)
+![GitHub release](https://img.shields.io/github/release/kosugikun/MusicBot.svg?style=flat-square)
 
 Before updating, make sure to read the [latest changes](/changelog), as some behaviour may have changed significantly.
 
