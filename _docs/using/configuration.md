@@ -1,6 +1,6 @@
 ---
-title: Configuration
-category: Using the bot
+title: コンフィグレーション
+category: ボットの使用
 order: 1
 ---
 
