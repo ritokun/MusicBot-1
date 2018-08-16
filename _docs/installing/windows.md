@@ -1,22 +1,22 @@
 ---
 title: Windows
-category: Installing the bot
+category: ボットのインストール
 order: 2
 ---
 
 <img class="doc-img" src="{{ site.baseurl }}/images/windows.png" alt="Windows" style="width: 75px; float: right;"/>
 
-> Due to issues with Python 3.6, please install [Python 3.5.4](https://www.python.org/ftp/python/3.5.4/python-3.5.4.exe). Support may be limited to being told to install Python 3.5.4 if using Python 3.6.
+Python 3.6の問題のため、[Python 3.5.4](https://www.python.org/ftp/python/3.5.4/python-3.5.4.exe)をインストールしてください。サポートは、Python 3.6を使用している場合、Python 3.5.4をインストールするように指示されることに限定されます。
 
-MusicBot can be installed on Windows 7, 8, and 10 too, though it requires installing some programs on your computer first.
+MusicBot JPは、Windows 7,8、および10にもインストールできますが、コンピュータに最初にいくつかのプログラムをインストールする必要があります。
 
-1. Install Python 3.5+. For the best results, install [Python 3.5.4](https://www.python.org/ftp/python/3.5.4/python-3.5.4.exe).
-2. During the setup, tick `Install launcher for all users (recommended)` and `Add Python 3.5 to PATH` when prompted.
-3. Install [Git for Windows](http://gitforwindows.org/).
-4. During the setup, tick `Use Git from the Windows Command Prompt`, `Checkout Windows-style, commit Unix-style endings`, and `Use MinTTY (the default terminal MSYS2)`.
-5. Open Git Bash by right-clicking an empty space inside of a folder (e.g My Documents) and clicking `Git Bash here`.
-6. Run `git clone https://github.com/Just-Some-Bots/MusicBot.git MusicBot -b master` in the command window that opens.
+1. Python 3.5+をインストールします。最良の結果を得るには、[Python 3.5.4](https://www.python.org/ftp/python/3.5.4/python-3.5.4.exe)をインストールしてください。
+2. セットアップ中に、プロンプトが表示されたら `すべてのユーザにランチャをインストールする（推奨）`と `PATHにPATHを追加する 'にチェックを入れてください。
+3. [Git for Windows](http://gitforwindows.org/)をインストールして下さい。
+4. セットアップ中に `WindowsコマンドプロンプトからGitを使う`、 `Checkout Windows-style、Unixスタイルの終了をコミットする '、` MinTTYを使う（デフォルト端末MSYS2）'にチェックを入れてください。
+5. Git Bashを開くには、フォルダ内の空のスペース（My Documentsなど）を右クリックし、「ここでBash Bash」をクリックします。
+6. 開いたコマンドウィンドウで `git clone https://github.com/kosugikun/MusicBot.git MusicBot -b master`を実行してください。
 
-> If you do not clone the bot using Git, and instead download the ZIP file from GitHub and attempt to run it, you will receive an error.
+> Gitを使ってボットをクローンしておらず、代わりにGitHubからZIPファイルをダウンロードして実行しようとすると、エラーが発生します。
 
-After doing that, a folder called `MusicBot` will appear in the folder you opened Git Bash in. [Configure]({{ site.baseurl }}/using/configuration) your bot, then run `update.bat` to update your dependencies, then `run.bat` to start the MusicBot.
+その後、Git Bashを開いたフォルダに、 `MusicBot`というフォルダが表示されます。あなたのボットを[設定]({{site.baseurl}}/ using/configuration）し、` update.bat`を実行してその後、 `run.bat`を実行してMusicBot JPを起動します。
