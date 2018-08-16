@@ -1,6 +1,6 @@
 ---
 title: Arch
-category: Installing the bot
+category: ボットのインストール
 order: 7
 ---
 
