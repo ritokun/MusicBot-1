@@ -5,7 +5,7 @@ order: 6
 ---
 
 <img class="doc-img" src="{{ site.baseurl }}/images/centos.png" alt="centos" style="width: 75px; float: right;"/>
-CentOSへのインストールは、主に未テストであり、問​​題のため正式にサポートされていません**。サポートを求めるときは、この点を念頭に置いてください。
+CentOSへのインストールは、主に未テストであり、**問​​題のため正式にサポートされていません**。サポートを求めるときは、この点を念頭に置いてください。
 
 CentOSのインストール手順は、ご使用のOSのバージョンによって異なります。
 
