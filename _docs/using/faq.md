@@ -1,6 +1,6 @@
 ---
 title: FAQ
-category: Using the bot
+category: ボットの使用
 order: 7
 ---
 
