@@ -1,6 +1,6 @@
 ---
 title: Ubuntu
-category: Installing the bot
+category: ボットのインストール
 order: 1
 ---
 
