@@ -6,7 +6,7 @@ order: 1
 
 <img class="doc-img" src="{{ site.baseurl }}/images/ubuntu.png" alt="Ubuntu" style="width: 75px; float: right;"/>
 
-コマンドラインからUbuntuにMusicBotをインストールすることは**推奨されています**システムの依存関係は使用しているUbuntuのバージョンによって異なります。まず、システムに必要な依存関係をインストールします。
+コマンドラインからUbuntuにMusicBot JPをインストールすることは**推奨されています**システムの依存関係は使用しているUbuntuのバージョンによって異なります。まず、システムに必要な依存関係をインストールします。
 
 ## Ubuntu 14.04
 ~~~ bash
