@@ -64,6 +64,4 @@ sudo python3.5 -m pip install -U -r requirements.txt
 ~~~
 {: title="CentOS 7.4" }
 
-Once everything has been completed, you can go ahead and [configure]({{ site.baseurl }}/using/configuration) the bot and then run with `sudo ./run.sh`.
-
 すべてが完了したら、ボットを [設定]({{ site.baseurl }}/using/configuration)し、`run.sh`を実行することができます。
