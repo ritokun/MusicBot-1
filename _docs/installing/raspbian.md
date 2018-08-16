@@ -19,7 +19,7 @@ sudo apt install git
 sudo apt install libopus-dev
 sudo apt install ffmpeg
 
-# MusicBot JPをクローン
+# MusicBot JPをクローン(ディテクトリは変えてもいいです)
 cd ~
 git clone https://github.com/Just-Some-Bots/MusicBot.git MusicBot -b master
 cd MusicBot
