@@ -1,6 +1,6 @@
 ---
 title: Debian
-category: Installing the bot
+category: ボットのインストール
 order: 5
 ---
 
