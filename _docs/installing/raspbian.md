@@ -26,5 +26,5 @@ cd MusicBot
 sudo python3 -m pip install --upgrade -r requirements.txt
 ```
 
-上記の手順をした後、`MusicBot`フォルを開き、Tokenなどを設定した後に、
-MusicBotフォルダの端末を開き./run.shを実行すれば、起動できます。
+上記の手順をした後、`MusicBot`フォルダを開き、`Token`などを設定した後に、
+`MusicBotフォルダ`の端末を開き`./run.sh`を実行すれば、起動できます。
